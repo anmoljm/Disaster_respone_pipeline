@@ -26,9 +26,21 @@ from sklearn.metrics import make_scorer, accuracy_score, f1_score, fbeta_score, 
 from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.metrics import classification_report
+from sqlalchemy import create_engine
+
 
 
 def load_data(database_filepath):
+    """
+    Saves cleaned data to an SQL database
+    Args:
+    df pandas_dataframe: Cleaned data returned from clean_data() function
+    database_file_name str: File path of SQL Database into which the cleaned\
+    data is to be saved
+    Returns:
+    None
+    """    
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table('disaster_response',engine)
     X = df['message']
@@ -37,6 +49,14 @@ def load_data(database_filepath):
     return X,Y,category_names
 
 def tokenize(text):
+    """
+    Tokenizes text data
+    Args:
+    text str: Messages as text data
+    Returns:
+    words list: Processed text after normalizing, tokenizing and lemmatizing
+    """
+
     #normalizing the text and detect urls
     
     url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
@@ -62,17 +82,36 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Build model with GridSearchCV
+    
+    Returns:
+    Trained model after performing grid search
+    """
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer = tokenize)),
+        ('vect', CountVectorizer()),
         ('tfidf', TfidfTransformer()),
-        ('multi_clf', MultiOutputClassifier(RandomForestClassifier()))
-    ])
+        ('clf', MultiOutputClassifier(RandomForestClassifier()))])
+    
+    parameters = {
+        #'tfidf__use_idf': (True, False),
+        'clf__estimator__n_estimators': [50, 100]
+        #'clf__estimator__min_samples_split': [2, 4]
+        } 
 
-    #cv = pipeline()#GridSearchCV(pipeline, param_grid=parameters, n_jobs = -1)
+    cv = GridSearchCV(pipeline, param_grid=parameters) 
 
-    return pipeline
+    return cv
 
 def evaluate_model(model, x_test, y_test, category_names):
+    """
+    Shows model's performance on test data
+    Args:
+    model: trained model
+    X_test: Test features
+    Y_test: Test targets
+    category_names: Target labels
+    """
     y_pred = model.predict(x_test)
 
     for i in range(len(category_names)):
@@ -80,6 +119,12 @@ def evaluate_model(model, x_test, y_test, category_names):
         print('Accuracy of %25s: %.2f' %(category_names[i], accuracy_score(y_test.iloc[:, i].values, y_pred[:,i])))
 
 def save_model(model, model_filepath):
+    """
+    Saves the model to a Python pickle file    
+    Args:
+    model: Trained model
+    model_filepath: Filepath to save the model
+    """    
     pickle.dump(model, open(model_filepath, "wb"))
     return None
 

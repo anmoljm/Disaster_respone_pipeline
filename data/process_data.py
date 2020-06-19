@@ -4,12 +4,31 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
+    """
+    - Takes inputs as two CSV files
+    - Imports them as pandas dataframe.
+    - Merges them into a single dataframe
+    Args:
+    messages_file_path str: Messages CSV file
+    categories_file_path str: Categories CSV file
+    Returns:
+    merged_df pandas_dataframe: Dataframe obtained from merging the two input\
+    data
+    """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(categories, how = 'outer', on = 'id')
     return df
 
 def clean_data(df):
+    """
+    - Cleans the combined dataframe for use by ML model
+    
+    Args:
+    df pandas_dataframe: Merged dataframe returned from load_data() function
+    Returns:
+    df pandas_dataframe: Cleaned data to be used by ML model
+    """    
     categories = df['categories'].str.split(';',expand = True)
     row = list(categories.iloc[0])
     f = lambda x: x[:-2]
@@ -28,6 +47,15 @@ def clean_data(df):
     return df
 
 def save_data(df, database_filename):
+    """
+    Saves cleaned data to an SQL database
+    Args:
+    df pandas_dataframe: Cleaned data returned from clean_data() function
+    database_file_name str: File path of SQL Database into which the cleaned\
+    data is to be saved
+    Returns:
+    None
+    """    
     engine = create_engine('sqlite:///'+database_filename) 
     df.to_sql('disaster_response', engine, index=False)
     return None
