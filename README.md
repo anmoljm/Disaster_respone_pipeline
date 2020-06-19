@@ -1,5 +1,12 @@
 # Disaster Response Pipeline Project
 
+### Libraries:
+nltk 3.3.0
+numpy 1.15.2
+pandas 0.23.4
+scikit-learn 0.20.0
+sqlalchemy 1.2.12
+
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
 
@@ -12,3 +19,7 @@
     `python run.py`
 
 3. Go to http://0.0.0.0:3001/
+
+### Acknowledgement:
+
+I wish to thank Figure Eight for dataset, and thank Udacity for advice and review.
